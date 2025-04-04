@@ -17,3 +17,5 @@ beausoleil.mc({
 
 // [ "34,000", "39,000", "44,000" ]
 ```
+
+ES module so you can import it however you fancy
