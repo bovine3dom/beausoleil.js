@@ -1,5 +1,9 @@
 // generate an array samples long using sampler. probably only useful for debugging
-export const r = (args, samples=10000, sampler=(l, h)=>(h-l)*Math.random()+l) => {
+export const r = (
+    args,
+    samples = 10000,
+    sampler = (l, h) => (h - l) * Math.random() + l,
+) => {
     const arr = new Array(samples)
     for (let i = 0; i < samples; i++) {
         arr[i] = sampler(...args)
@@ -21,31 +25,65 @@ export const broadcast = (f, ...arrays) => {
     return result
 }
 
-export function mc({f=x=>x, vars=[], precision=3, samples=10000, quantiles=[0.5], formatter=result=>parseFloat(result.toPrecision(precision)).toLocaleString(), sort=array=>array.sort((l,r)=>l-r)}) {
+export function mc({
+    f = x => x,
+    vars = [],
+    precision = 3,
+    samples = 10000,
+    quantiles = [0.5],
+    formatter = result =>
+        parseFloat(result.toPrecision(precision)).toLocaleString(),
+    sort = array => array.sort((l, r) => l - r),
+}) {
     // each var has {bounds:[], sampler: bounds => one_sample, defaults to uniform}
-    const results = sort(broadcast(f, ...vars.map(obj => r(obj.bounds, samples, obj.sampler ? obj.sampler : (l, h)=>(h-l)*Math.random()+l))))
-    return quantiles.map(q => formatter(results[Math.floor(samples*q)]))
+    const results = sort(
+        broadcast(
+            f,
+            ...vars.map(obj =>
+                r(
+                    obj.bounds,
+                    samples,
+                    obj.sampler
+                        ? obj.sampler
+                        : (l, h) => (h - l) * Math.random() + l,
+                ),
+            ),
+        ),
+    )
+    return quantiles.map(q => formatter(results[Math.floor(samples * q)]))
 }
 
 // sort arrays of arrays row-wise
 export function rowSort(array2d) {
-    const sortedTranspose = array2d[0].map((_, i) => array2d.map(row => row[i]).sort((l,r)=>l-r))
+    const sortedTranspose = array2d[0].map((_, i) =>
+        array2d.map(row => row[i]).sort((l, r) => l - r),
+    )
     return sortedTranspose[0].map((_, i) => sortedTranspose.map(col => col[i]))
 }
 
-export function mc2d({f=x => [x], vars=[], precision=3, formatter=x=>x.map(result=>parseFloat(result.toPrecision(precision)).toLocaleString()), sort=rowSort, ...rest}) {
-    return mc({f, vars, formatter, sort, ...rest})
+export function mc2d({
+    f = x => [x],
+    vars = [],
+    precision = 3,
+    formatter = x =>
+        x.map(result =>
+            parseFloat(result.toPrecision(precision)).toLocaleString(),
+        ),
+    sort = rowSort,
+    ...rest
+}) {
+    return mc({ f, vars, formatter, sort, ...rest })
 }
 
 let _bM_freebie = null // box-muller is buy-one-get-one-free 😎
-export function boxMuller(lower, upper){
-    // assume lower, upper are +/- 2std of mean 
-    const std = (upper-lower)/4
-    const mean = (upper+lower)/2
+export function boxMuller(lower, upper) {
+    // assume lower, upper are +/- 2std of mean
+    const std = (upper - lower) / 4
+    const mean = (upper + lower) / 2
     if (_bM_freebie !== null) {
         const theBestThingInLife = _bM_freebie
         _bM_freebie = null
-        return theBestThingInLife*std+mean
+        return theBestThingInLife * std + mean
     }
 
     let u1
@@ -53,8 +91,8 @@ export function boxMuller(lower, upper){
         u1 = Math.random()
     } while (u1 === 0) // thou shalt not take the log of 0
     const u2 = Math.random()
-    const z0 = Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2)
-    const z1 = Math.sqrt(-2*Math.log(u2))*Math.sin(2*Math.PI*u1)
+    const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+    const z1 = Math.sqrt(-2 * Math.log(u2)) * Math.sin(2 * Math.PI * u1)
     _bM_freebie = z1
-    return z0*std+mean
+    return z0 * std + mean
 }
