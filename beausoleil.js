@@ -25,12 +25,14 @@ function mc({f=x=>x, vars=[], precision=3, samples=10000, quantiles=[0.5], forma
     return quantiles.map(q => formatter(results[Math.floor(samples*q)]))
 }
 
-c = broadcast((x,y)=>x*y+1, r([1e7,11e7]), r([-1,3])).sort((l,r)=>l-r)
-
-console.log(c[Math.floor(samples/10)].toPrecision(3))
-console.log(c[Math.floor((2*samples)/4)].toPrecision(3))
-console.log(c[Math.floor((9*samples)/10)].toPrecision(3))
-
 console.log(mc({f:(x,y) => x*y+1, vars:[{bounds:[1e7, 11e7]}, {bounds:[-1, 3]}], quantiles:[0.1, 0.5, 0.9], precision:2}))
         
-console.log(mc({f:(x,rate) => [0,1,2,3,4,5].map(y => x*(rate**y)), vars:[{bounds:[230e3, 350e3]}, {bounds:[1.1, 1.13]}], quantiles:[0.1, 0.5, 0.9], formatter:x=>x, sort:x=>x.sort((l,r)=>l.slice(-1) - r.slice(-1))})) //
+
+
+// for arrays of arrays we want to sort each one row-wise
+function rowSort(array2d) {
+    const sortedTranspose = array2d[0].map((_, i) => array2d.map(row => row[i]).sort((l,r)=>l-r))
+    return sortedTranspose[0].map((_, i) => sortedTranspose.map(col => col[i]))
+}
+
+console.log(mc({f:(x,rate) => [0,1,2,3,4,5].map(y => x*(rate**y)), vars:[{bounds:[230e3, 350e3]}, {bounds:[1.1, 1.13]}], quantiles:[0.1, 0.5, 0.9], formatter:x=>x.map(result=>parseFloat(result.toPrecision(3))), sort:rowSort})) //
