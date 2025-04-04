@@ -25,17 +25,21 @@ export const broadcast = (f, ...arrays) => {
     return result
 }
 
+/**
+ * apply `f` to variables `vars` with bounds `[l, h]`, taking `samples` samples using `sampler` and returning `quantiles` quantiles
+ *
+ * the first element of vars will be supplied as the first argument to f, the second element as the second argument and so on.
+ */
 export function mc({
     f = x => x,
-    vars = [],
+    vars = [], // each var has {bounds:[], sampler: bounds => one_sample, defaults to uniform}
     precision = 3,
     samples = 10000,
-    quantiles = [0.5],
+    quantiles = [0.25, 0.5, 0.75],
     formatter = result =>
         parseFloat(result.toPrecision(precision)).toLocaleString(),
     sort = array => array.sort((l, r) => l - r),
 }) {
-    // each var has {bounds:[], sampler: bounds => one_sample, defaults to uniform}
     const results = sort(
         broadcast(
             f,
@@ -61,6 +65,9 @@ export function rowSort(array2d) {
     return sortedTranspose[0].map((_, i) => sortedTranspose.map(col => col[i]))
 }
 
+/**
+ * Helper function for functions that return an array, such as a time series
+ */
 export function mc2d({
     f = x => [x],
     vars = [],
@@ -76,10 +83,16 @@ export function mc2d({
 }
 
 let _bM_freebie = null // box-muller is buy-one-get-one-free 😎
-export function boxMuller(lower, upper) {
+
+/**
+ * Gaussian / Normal distribution sampler, lower/upper bounds are a convenience wrapper to set std and mean covering 95% of the distribution
+ */
+export function boxMuller({ lower, upper, std = 1, mean = 0 }) {
     // assume lower, upper are +/- 2std of mean
-    const std = (upper - lower) / 4
-    const mean = (upper + lower) / 2
+    if (lower != undefined && upper != undefined) {
+        std = (upper - lower) / 4
+        mean = (upper + lower) / 2
+    }
     if (_bM_freebie !== null) {
         const theBestThingInLife = _bM_freebie
         _bM_freebie = null
