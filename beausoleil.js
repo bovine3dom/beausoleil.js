@@ -26,7 +26,7 @@ export const broadcast = (f, ...arrays) => {
 }
 
 /**
- * apply `f` to variables `vars` with bounds `[l, h]`, taking `samples` samples using `sampler` and returning `quantiles` quantiles
+ * apply `f` to variables `vars` with bounds `[l, h]`, taking `samples` samples using `sampler` and returning `quantiles` quantiles or `raw` results
  *
  * the first element of vars will be supplied as the first argument to f, the second element as the second argument and so on.
  */
@@ -39,6 +39,7 @@ export function mc({
     formatter = result =>
         parseFloat(result.toPrecision(precision)).toLocaleString(),
     sort = array => array.sort((l, r) => l - r),
+    raw = false,
 }) {
     const results = sort(
         broadcast(
@@ -48,7 +49,9 @@ export function mc({
             ),
         ),
     )
-    return quantiles.map(q => formatter(results[Math.floor(samples * q)]))
+    return raw
+        ? results
+        : quantiles.map(q => formatter(results[Math.floor(samples * q)]))
 }
 
 // sort arrays of arrays row-wise
