@@ -32,7 +32,7 @@ export const broadcast = (f, ...arrays) => {
  */
 export function mc({
     f = x => x,
-    vars = [], // each var has {bounds:[], sampler: bounds => one_sample, defaults to uniform}
+    vars = [], // each var has {bounds:[], sampler: bounds => one_sample, defaults to normal dist with bounds covering 95% of distribution}
     precision = 3,
     samples = 10000,
     quantiles = [0.25, 0.5, 0.75],
@@ -44,13 +44,7 @@ export function mc({
         broadcast(
             f,
             ...vars.map(obj =>
-                r(
-                    obj.bounds,
-                    samples,
-                    obj.sampler
-                        ? obj.sampler
-                        : (l, h) => (h - l) * Math.random() + l,
-                ),
+                r(obj.bounds, samples, obj.sampler ? obj.sampler : boxMuller),
             ),
         ),
     )
@@ -86,8 +80,18 @@ let _bM_freebie = null // box-muller is buy-one-get-one-free 😎
 
 /**
  * Gaussian / Normal distribution sampler, lower/upper bounds are a convenience wrapper to set std and mean covering 95% of the distribution
+ *
+ * args can be [lower, upper] or [{lower, upper, std = (upper - lower) / 4, mean = (upper + lower) / 2}]
  */
-export function boxMuller({ lower, upper, std = 1, mean = 0 }) {
+export function boxMuller(...args) {
+    let std, mean, lower, upper
+    ;[lower, upper] = args
+    if (lower != undefined && upper != undefined) {
+        std = (upper - lower) / 4
+        mean = (upper + lower) / 2
+    } else {
+        ;[{ lower, upper, std = 1, mean = 0 }] = args
+    }
     // assume lower, upper are +/- 2std of mean
     if (lower != undefined && upper != undefined) {
         std = (upper - lower) / 4
@@ -109,3 +113,8 @@ export function boxMuller({ lower, upper, std = 1, mean = 0 }) {
     _bM_freebie = z1
     return z0 * std + mean
 }
+
+/**
+ * Uniform distribution sampler (lower, upper) bounds
+ */
+export const uniform = (lower, upper) => (upper - lower) * Math.random() + lower

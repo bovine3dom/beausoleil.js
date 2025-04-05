@@ -10,7 +10,7 @@ function neowm(f) {
     console.log(end - start)
 }
 
-console.log("uniform distribution")
+console.log("normal distribution")
 neowm(_ =>
     beausoleil.mc({
         f: (x, y) => x * y, // simple multiplication
@@ -21,18 +21,18 @@ neowm(_ =>
     }),
 )
 
-console.log("normal distribution")
+console.log("uniform distribution")
 neowm(_ =>
     beausoleil.mc({
         f: (x, y) => x * y,
         vars: [
             {
-                bounds: [{ lower: 60, upper: 70 }],
-                sampler: beausoleil.boxMuller,
+                bounds: [60, 70],
+                sampler: beausoleil.uniform,
             },
             {
-                bounds: [{ lower: 500, upper: 700 }],
-                sampler: beausoleil.boxMuller,
+                bounds: [500, 700],
+                sampler: beausoleil.uniform,
             },
         ],
         quantiles: [0.1, 0.5, 0.9],
@@ -42,7 +42,7 @@ neowm(_ =>
     }),
 )
 
-console.log("time series with uniform distribution")
+console.log("time series")
 neowm(_ =>
     beausoleil.mc2d({
         f: (x, rate) => [0, 1, 2, 3, 4, 5].map(y => x * rate ** y), // e.g. compound interest
@@ -52,7 +52,7 @@ neowm(_ =>
     }),
 )
 
-console.log("big calculation")
+console.log("big calculation with mixed distributions")
 neowm(_ =>
     beausoleil.mc2d({
         f: (purchase_price, rate, rent, maintenance, refurbishment, area) =>
@@ -64,17 +64,17 @@ neowm(_ =>
                     maintenance * area * y,
             ), // e.g. purchase, refurbishment, rental, maintenance
         vars: [
-            { bounds: [330e3, 350e3] },
-            { bounds: [1.05, 1.06] },
-            { bounds: [1000, 1200] },
-            { bounds: [3, 5] },
+            { bounds: [330e3, 350e3], sampler: beausoleil.boxMuller },
+            { bounds: [1.05, 1.06], sampler: beausoleil.uniform },
+            { bounds: [1000, 1200], sampler: beausoleil.boxMuller },
+            { bounds: [3, 5], sampler: beausoleil.boxMuller },
             {
-                bounds: [{ lower: 500, upper: 700 }],
+                bounds: [500, 700],
                 sampler: beausoleil.boxMuller,
             },
             {
-                bounds: [{ lower: 50, upper: 60 }],
-                sampler: beausoleil.boxMuller,
+                bounds: [50, 60],
+                sampler: beausoleil.uniform,
             },
         ],
         quantiles: [0.1, 0.5, 0.9],
