@@ -33,7 +33,7 @@ export const broadcast = (f, ...arrays) => {
 export function mc({
     f = x => x,
     vars = [], // each var has {bounds:[], sampler: bounds => one_sample, defaults to normal dist with bounds covering 95% of distribution}
-    precision = 3,
+    precision = 2,
     samples = 10000,
     quantiles = [0.25, 0.5, 0.75],
     formatter = result =>
