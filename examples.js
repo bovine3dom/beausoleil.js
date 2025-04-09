@@ -81,3 +81,33 @@ neowm(_ =>
         samples: 10000,
     }),
 )
+
+console.log("time series with varying rate")
+const years = 5
+let accumulator
+neowm(_ =>
+    beausoleil.mc2d({
+        f: (x, rate) =>
+            new Array(years + 1).fill().map(
+                // fill() required because empty arrays can't be mapped
+                ((accumulator = 1), // when map is called, accumulator is set to 1
+                (_, i) => {
+                    let result = x * accumulator
+                    accumulator *= 1 * rate[i] // set up accumulator for the next iteration (i.e. force there to be a year 0)
+                    return result
+                }),
+            ),
+        vars: [
+            { bounds: [230e3, 350e3] },
+            {
+                bounds: [1.1, 1.13],
+                sampler: (...args) =>
+                    new Array(years)
+                        .fill()
+                        .map(_ => beausoleil.boxMuller(...args)),
+            }, // each sample returns years samples
+        ],
+        quantiles: [0.1, 0.5, 0.9],
+        samples: 10000,
+    }),
+)
