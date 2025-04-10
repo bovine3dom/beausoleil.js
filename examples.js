@@ -112,23 +112,35 @@ neowm(_ =>
     }),
 )
 
-
-console.log("boolean maths, sheffield -> paris using superfrog secret fares and eurostar snap")
+console.log(
+    "boolean maths, sheffield -> paris using superfrog secret fares and eurostar snap",
+)
 // we have departure time as a uniform distribution (simplification, real departure times are e.g. hourly and seats will be less likely at peak times)
 // journey time is either a poisson or normal distribution
 // eurostar check-in time is a normal distribution
 // then it becomes: depature + journey + check-in < departure
 const sheffield_paris_samples = 100000
-neowm(_ =>
-    beausoleil.mc({
-        f: (sheffield_depart, journey_time, eurostar_check_in, london_depart) => (sheffield_depart + journey_time + eurostar_check_in < london_depart) + 0.0, // + 0.0 to cast bool to float
-        vars: [
-            { bounds: [7*60, 12*60], sampler: beausoleil.uniform },
-            { bounds: [2*60, 2.1*60] },
-            { bounds: [30, 60] },
-            { bounds: [13*60, 20*60], sampler: beausoleil.uniform },
-        ],
-        samples: sheffield_paris_samples,
-        raw: true,
-    }).reduce((a, b) => a + b, 0) / sheffield_paris_samples // take mean
+neowm(
+    _ =>
+        beausoleil
+            .mc({
+                f: (
+                    sheffield_depart,
+                    journey_time,
+                    eurostar_check_in,
+                    london_depart,
+                ) =>
+                    (sheffield_depart + journey_time + eurostar_check_in <
+                        london_depart) +
+                    0.0, // + 0.0 to cast bool to float
+                vars: [
+                    { bounds: [7 * 60, 12 * 60], sampler: beausoleil.uniform },
+                    { bounds: [2 * 60, 2.1 * 60] },
+                    { bounds: [30, 60] },
+                    { bounds: [13 * 60, 20 * 60], sampler: beausoleil.uniform },
+                ],
+                samples: sheffield_paris_samples,
+                raw: true,
+            })
+            .reduce((a, b) => a + b, 0) / sheffield_paris_samples, // take mean
 )
